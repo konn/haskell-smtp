@@ -117,7 +117,11 @@ defineCommand 'HELP "HELP" [ 'optString ]
 defineCommand 'NOOP "NOOP" [ 'optString ]
 defineCommand 'QUIT "QUIT" []
 
-dat  = DATA <$  stringCI "DATA"
+dat  = DATA <$  (char 'D' <|> char 'd')
+            <*  (char 'A' <|> char 'a')
+            <*  (char 'T' <|> char 't')
+            <*  (char 'A' <|> char 'a')
+            <*  string "\r\n"
             <*> dataBody (BS.drop 2)
   where
     dataBody thunk = do
@@ -133,8 +137,8 @@ extension = Extension <$> (BS.map toUpper <$> takeWhile1 isAlpha_ascii)
                       <*  string "\r\n"
 
 smtpCommand :: Parser SMTPCommand
-smtpCommand = helo <|> ehlo <|> mail <|> rcpt <|> dat  <|> rset
-          <|> vrfy <|> expn <|> help <|> noop <|> quit
+smtpCommand = helo <|> try ehlo <|> mail <|> try rcpt <|> dat  <|> rset
+          <|> vrfy <|> expn     <|> help <|> noop     <|> quit
 
 textstring :: Parser ByteString
 textstring = takeWhile1 $ inClass "\t -~"

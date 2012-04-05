@@ -49,7 +49,7 @@ Library
                ,       bytestring         == 0.9.*
                ,       text               == 0.11.*
                ,       attoparsec         == 0.10.*
-               ,       smtp-server        == 0.0.*
+               ,       smtp-types         == 0.0.*
   
   -- Modules not exported by this package.
   -- Other-modules:       
