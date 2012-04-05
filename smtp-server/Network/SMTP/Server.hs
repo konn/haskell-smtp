@@ -4,7 +4,7 @@ import Data.Conduit
 import Data.Conduit.Network
 import qualified Data.Conduit.List as LC
 import Data.ByteString.Char8 ()
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Conduit.Binary as BC
 import Network.SMTP.Server.CStateT
 import Control.Monad.IO.Class
@@ -28,17 +28,19 @@ smtpServer :: Application IO
 smtpServer src sink = do
   LC.sourceList [ renderReply $ SMTPReply 220 (Just "localhost") ["hello"]] $$ sink
   src $$ C.sequence (sinkParser smtpCommand)
-      =$ LC.mapM (\a -> liftIO (print a) >> return a)
-      =$ genReply
-      =$ LC.map renderReply
+      =$ LC.map ((`BS.append` "\r\n") . BS.pack . show)
       =$ sink
 
+main :: IO ()
+main = do
+  runTCPServer (ServerSettings 10025 HostAny) smtpServer
 
 hoge :: IO ()
 hoge = runResourceT $ do
   BC.sourceHandle stdin $$ C.sequence (sinkParser smtpCommand)
                         =$ LC.mapM_ (liftIO . print)
 
+genReply :: Conduit SMTPCommand IO SMTPReply
 genReply = conduitState () (const $ const $ return $ StateProducing () [SMTPReply 250 Nothing []])
              (const $ return [])
 
